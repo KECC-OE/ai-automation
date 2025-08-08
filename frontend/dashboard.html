@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 자동화 대시보드 V2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+        
+        .navbar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 20px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #94a3b8;
+        }
+        
+        .metric {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        input, textarea {
+            flex: 1;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .task-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .task-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .task-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .task-info {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-meta {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+        
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        
+        .badge-completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .badge-in_progress {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+        
+        .badge-pending {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+        }
+        
+        .response-box {
+            padding: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            margin-top: 1rem;
+            min-height: 100px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body> 
+    <nav class="navbar">
+        <div class="logo">🤖 AI 자동화 대시보드 V2</div>
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span id="serverStatus">서버 연결 확인중...</span>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div id="alertBox" class="alert">
+            <span id="alertMessage"></span>
+        </div>
+        
+        <div class="grid">
+            <!-- 통계 카드 -->
+            <div class="card">
+                <h3 class="card-title">📊 프로젝트 통계</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalTasks">0</div>
+                        <div class="stat-label">전체 작업</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">완료</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="aiGenerations">0</div>
+                        <div class="stat-label">AI 생성</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="uploadedFiles">0</div>
+                        <div class="stat-label">파일</div>
+                    </div>
+                </div>
+                <button onclick="loadStatistics()" style="margin-top: 1rem; width: 100%;">
+                    📈 통계 새로고침
+                </button>
+            </div>
+            
+            <!-- 작업 관리 카드 -->
+            <div class="card">
+                <h3 class="card-title">📝 작업 관리</h3>
+                <div class="input-group">
+                    <input type="text" id="taskInput" placeholder="새 작업 입력...">
+                    <button onclick="addTask()">추가</button>
+                </div>
+                <div class="task-list" id="taskList">
+                    <!-- 작업 목록이 여기에 표시됩니다 -->
+                </div>
+                <button onclick="loadTasks()" style="margin-top: 0.5rem; width: 100%;">
+                    🔄 작업 목록 새로고침
+                </button>
+            </div>
+            
+            <!-- AI 텍스트 생성 카드 -->
+            <div class="card">
+                <h3 class="card-title">🤖 AI 텍스트 생성</h3>
+                <textarea id="aiPrompt" rows="3" placeholder="AI에게 물어보세요..."></textarea>
+                <button onclick="generateAI()" style="width: 100%; margin-top: 0.5rem;">
+                    ✨ AI 생성
+                </button>
+                <div class="response-box" id="aiResponse">
+                    응답이 여기에 표시됩니다...
+                </div>
+            </div>
+            
+            <!-- 파일 업로드 카드 -->
+            <div class="card">
+                <h3 class="card-title">📁 파일 업로드</h3>
+                <input type="file" id="fileInput" style="margin-bottom: 1rem;">
+                <button onclick="uploadFile()" style="width: 100%;">
+                    📤 파일 업로드
+                </button>
+                <div class="response-box" id="uploadResult">
+                    업로드 결과가 여기에 표시됩니다...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 서버 URL
+        const API_URL = 'http://127.0.0.1:5000';
+        
+        // 페이지 로드 시 초기화 (자동 새로고침 없음!)
+        window.onload = function() {
+            console.log('Dashboard V2 초기화...');
+            checkServerConnection();
+            loadTasks();
+            loadStatistics();
+        };
+        
+        // 알림 표시 함수
+        function showAlert(message, duration = 3000) {
+            const alertBox = document.getElementById('alertBox');
+            const alertMessage = document.getElementById('alertMessage');
+            alertMessage.textContent = message;
+            alertBox.classList.add('show');
+            
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, duration);
+        }
+        
+        // 서버 연결 확인
+        async function checkServerConnection() {
+            try {
+                const response = await fetch(`${API_URL}/`);
+                const data = await response.json();
+                
+                document.getElementById('serverStatus').textContent = '서버 연결됨';
+                document.getElementById('serverStatus').style.color = '#22c55e';
+                console.log('서버 연결 성공');
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = '서버 오프라인';
+                document.getElementById('serverStatus').style.color = '#ef4444';
+                console.error('서버 연결 실패:', error);
+            }
+        }
+        
+        // 통계 로드
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_URL}/api/statistics`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    
+                    // 작업 통계
+                    const totalTasks = (stats.tasks.completed || 0) + 
+                                      (stats.tasks.in_progress || 0) + 
+                                      (stats.tasks.pending || 0);
+                    document.getElementById('totalTasks').textContent = totalTasks;
+                    document.getElementById('completedTasks').textContent = stats.tasks.completed || 0;
+                    
+                    // AI 통계
+                    document.getElementById('aiGenerations').textContent = 
+                        stats.ai.total_generations || 0;
+                    
+                    // 파일 통계
+                    document.getElementById('uploadedFiles').textContent = 
+                        stats.files.total_files || 0;
+                    
+                    showAlert('통계를 업데이트했습니다!');
+                }
+            } catch (error) {
+                console.error('통계 로드 오류:', error);
+            }
+        }
+        
+        // 작업 목록 불러오기
+        async function loadTasks() {
+            try {
+                const response = await fetch(`${API_URL}/api/tasks`);
+                const data = await response.json();
+                
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = '';
+                
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(task => {
+                        const taskItem = document.createElement('div');
+                        taskItem.className = 'task-item';
+                        
+                        let badgeClass = 'badge-pending';
+                        if (task.status === 'completed') badgeClass = 'badge-completed';
+                        else if (task.status === 'in_progress') badgeClass = 'badge-in_progress';
+                        
+                        taskItem.innerHTML = `
+                            <div class="task-info">
+                                <div class="task-title">${task.title}</div>
+                                <div class="task-meta">
+                                    <span class="badge ${badgeClass}">${task.status}</span>
+                                    ${task.created_at ? ` • ${new Date(task.created_at).toLocaleDateString()}` : ''}
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                ${task.status !== 'completed' ? 
+                                    `<button class="btn-small" onclick="updateTaskStatus(${task.id}, 'completed')">✓</button>` : ''}
+                                <button class="btn-small btn-delete" onclick="deleteTask(${task.id})">×</button>
+                            </div>
+                        `;
+                        taskList.appendChild(taskItem);
+                    });
+                } else {
+                    taskList.innerHTML = '<p style="text-align: center; color: #94a3b8;">작업이 없습니다.</p>';
+                }
+            } catch (error) {
+                console.error('작업 목록 로드 오류:', error);
+            }
+        }
+        
+        // 새 작업 추가
+        async function addTask() {
+            const input = document.getElementById('taskInput');
+            const title = input.value.trim();
+            
+            if (!title) {
+                showAlert('작업 제목을 입력하세요!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✅ 작업이 추가되었습니다!');
+                    input.value = '';
+                    loadTasks();
+                    loadStatistics();
+                }
+            } catch (error) {
+                showAlert('⚠️ 작업 추가 실패');
+                console.error('작업 추가 오류:', error);
+            }
+        }
+        
+        // 작업 상태 업데이트
+        async function updateTaskStatus(taskId, status) {
+            try {
+                const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✅ 작업이 완료되었습니다!');
+                    loadTasks();
+                    loadStatistics();
+                }
+            } catch (error) {
+                console.error('작업 업데이트 오류:', error);
+            }
+        }
+        
+        // 작업 삭제
+        async function deleteTask(taskId) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('✅ 작업이 삭제되었습니다!');
+                    loadTasks();
+                    loadStatistics();
+                }
+            } catch (error) {
+                console.error('작업 삭제 오류:', error);
+            }
+        }
+        
+        // AI 텍스트 생성
+        async function generateAI() {
+            const prompt = document.getElementById('aiPrompt').value.trim();
+            
+            if (!prompt) {
+                showAlert('프롬프트를 입력하세요!');
+                return;
+            }
+            
+            const responseBox = document.getElementById('aiResponse');
+            responseBox.innerHTML = '<div class="loading"></div> 생성중...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                const data = await response.json();
+                
+                responseBox.innerHTML = `
+                    <strong>🤖 AI 응답:</strong><br>
+                    ${data.response}<br><br>
+                    <small>토큰: ${data.tokens} | 모델: ${data.model}</small>
+                `;
+                
+                showAlert('✅ AI 생성 완료!');
+                loadStatistics();
+            } catch (error) {
+                responseBox.innerHTML = '⚠️ 생성 실패';
+                console.error('AI 생성 오류:', error);
+            }
+        }
+        
+        // 파일 업로드
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('파일을 선택하세요!');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const resultBox = document.getElementById('uploadResult');
+            resultBox.innerHTML = '<div class="loading"></div> 업로드중...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultBox.innerHTML = `
+                        <strong>✅ 업로드 성공!</strong><br>
+                        파일명: ${data.data.original_name}<br>
+                        크기: ${data.data.size}<br>
+                        형식: ${data.data.type}
+                        ${data.data.analysis ? `<br>분석: ${JSON.stringify(data.data.analysis)}` : ''}
+                    `;
+                    showAlert('✅ 파일 업로드 완료!');
+                    fileInput.value = '';
+                    loadStatistics();
+                } else {
+                    resultBox.innerHTML = `⚠️ ${data.message}`;
+                }
+            } catch (error) {
+                resultBox.innerHTML = '⚠️ 업로드 실패';
+                console.error('파일 업로드 오류:', error);
+            }
+        }
+        
+        // Enter 키로 작업 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('taskInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

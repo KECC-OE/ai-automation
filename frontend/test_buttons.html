@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 자동화 시스템 - Working Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #4ade80;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        input[type="text"], 
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-left: 4px solid #667eea;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .task-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+        
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .task-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .task-actions button {
+            padding: 0.25rem 0.75rem;
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .btn-complete {
+            background: #28a745;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 AI 자동화 시스템</h1>
+        <span class="status" id="serverStatus">서버 연결중...</span>
+    </div>
+    
+    <div class="container">
+        <div class="grid">
+            <!-- 통계 카드 -->
+            <div class="card">
+                <h2>📊 시스템 통계</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalTasks">0</div>
+                        <div class="stat-label">전체 작업</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">완료</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="aiCount">0</div>
+                        <div class="stat-label">AI 생성</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="fileCount">0</div>
+                        <div class="stat-label">파일</div>
+                    </div>
+                </div>
+                <button onclick="refreshStats()">📈 통계 새로고침</button>
+            </div>
+            
+            <!-- 작업 관리 카드 -->
+            <div class="card">
+                <h2>📝 작업 관리</h2>
+                <input type="text" id="taskInput" placeholder="새 작업을 입력하세요..." onkeypress="if(event.key==='Enter') addTask()">
+                <button onclick="addTask()">➕ 작업 추가</button>
+                <div class="task-list" id="taskList">
+                    <!-- 작업 목록이 여기에 표시됩니다 -->
+                </div>
+            </div>
+            
+            <!-- AI 생성 카드 -->
+            <div class="card">
+                <h2>🤖 AI 텍스트 생성</h2>
+                <textarea id="aiPrompt" rows="3" placeholder="AI에게 질문하세요... (예: 안녕, 오늘 뭐하지?, 도움)"></textarea>
+                <button onclick="generateAI()">✨ AI 생성</button>
+                <div class="result-box" id="aiResult">AI 응답이 여기에 표시됩니다...</div>
+            </div>
+            
+            <!-- 파일 업로드 카드 -->
+            <div class="card">
+                <h2>📁 파일 업로드</h2>
+                <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.gif,.csv,.xlsx,.docx">
+                <button onclick="uploadFile()">📤 파일 업로드</button>
+                <div class="result-box" id="uploadResult">업로드 결과가 여기에 표시됩니다...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://127.0.0.1:5000';
+        let aiGenerationCount = 0;
+        let fileUploadCount = 0;
+        
+        // 페이지 로드 시 초기화
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard 시작...');
+            checkServer();
+            loadTasks();
+            loadStats();
+        });
+        
+        // 서버 연결 확인
+        async function checkServer() {
+            try {
+                const response = await fetch(`${API_URL}/`);
+                const data = await response.json();
+                document.getElementById('serverStatus').textContent = '✅ 서버 연결됨';
+                document.getElementById('serverStatus').style.background = '#28a745';
+                console.log('서버 연결 성공');
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = '❌ 서버 오프라인';
+                document.getElementById('serverStatus').style.background = '#dc3545';
+                console.error('서버 연결 실패:', error);
+            }
+        }
+        
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/statistics`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    const total = (stats.tasks.completed || 0) + 
+                                 (stats.tasks.in_progress || 0) + 
+                                 (stats.tasks.pending || 0);
+                    
+                    document.getElementById('totalTasks').textContent = total;
+                    document.getElementById('completedTasks').textContent = stats.tasks.completed || 0;
+                    document.getElementById('aiCount').textContent = aiGenerationCount;
+                    document.getElementById('fileCount').textContent = fileUploadCount;
+                }
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+        
+        // 통계 새로고침
+        function refreshStats() {
+            loadTasks();
+            loadStats();
+            alert('통계를 새로고침했습니다!');
+        }
+        
+        // 작업 목록 로드
+        async function loadTasks() {
+            try {
+                const response = await fetch(`${API_URL}/api/tasks`);
+                const data = await response.json();
+                
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = '';
+                
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(task => {
+                        const taskDiv = document.createElement('div');
+                        taskDiv.className = 'task-item';
+                        taskDiv.innerHTML = `
+                            <span>${task.title} (${task.status})</span>
+                            <div class="task-actions">
+                                ${task.status !== 'completed' ? 
+                                    `<button class="btn-complete" onclick="completeTask(${task.id})">✓</button>` : ''}
+                                <button class="btn-delete" onclick="deleteTask(${task.id})">×</button>
+                            </div>
+                        `;
+                        taskList.appendChild(taskDiv);
+                    });
+                } else {
+                    taskList.innerHTML = '<p style="text-align: center; color: #999;">작업이 없습니다</p>';
+                }
+            } catch (error) {
+                console.error('작업 로드 실패:', error);
+            }
+        }
+        
+        // 작업 추가
+        async function addTask() {
+            const input = document.getElementById('taskInput');
+            const title = input.value.trim();
+            
+            if (!title) {
+                alert('작업 제목을 입력하세요!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/tasks`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({title})
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    input.value = '';
+                    loadTasks();
+                    loadStats();
+                    alert('작업이 추가되었습니다!');
+                }
+            } catch (error) {
+                console.error('작업 추가 실패:', error);
+                alert('작업 추가에 실패했습니다.');
+            }
+        }
+        
+        // 작업 완료
+        async function completeTask(taskId) {
+            try {
+                const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({status: 'completed'})
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    loadTasks();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('작업 완료 실패:', error);
+            }
+        }
+        
+        // 작업 삭제
+        async function deleteTask(taskId) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    loadTasks();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('작업 삭제 실패:', error);
+            }
+        }
+        
+        // AI 생성
+        async function generateAI() {
+            const promptInput = document.getElementById('aiPrompt');
+            const prompt = promptInput.value.trim();
+            
+            if (!prompt) {
+                alert('질문을 입력하세요!');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('aiResult');
+            resultDiv.innerHTML = '<div class="loading"></div> AI가 생각중...';
+            resultDiv.className = 'result-box';
+            
+            try {
+                console.log('AI 요청:', prompt);
+                
+                const response = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({prompt})
+                });
+                
+                const data = await response.json();
+                console.log('AI 응답:', data);
+                
+                if (data.success && data.response) {
+                    resultDiv.className = 'result-box success';
+                    resultDiv.innerHTML = `🤖 AI 응답:\n\n${data.response}\n\n📊 토큰: ${data.tokens}`;
+                    aiGenerationCount++;
+                    document.getElementById('aiCount').textContent = aiGenerationCount;
+                } else {
+                    throw new Error('응답 형식 오류');
+                }
+            } catch (error) {
+                console.error('AI 생성 실패:', error);
+                resultDiv.className = 'result-box error';
+                resultDiv.innerHTML = `❌ 오류: ${error.message}`;
+            }
+        }
+        
+        // 파일 업로드
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('파일을 선택하세요!');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('uploadResult');
+            resultDiv.innerHTML = '<div class="loading"></div> 업로드중...';
+            resultDiv.className = 'result-box';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                console.log('파일 업로드:', file.name);
+                
+                const response = await fetch(`${API_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('업로드 응답:', data);
+                
+                if (data.success) {
+                    resultDiv.className = 'result-box success';
+                    resultDiv.innerHTML = `✅ 업로드 성공!\n\n파일명: ${data.data.original_name}\n크기: ${data.data.size}\n형식: ${data.data.type}`;
+                    
+                    if (data.data.analysis) {
+                        resultDiv.innerHTML += `\n\n📊 분석 결과:\n줄: ${data.data.analysis.lines}\n단어: ${data.data.analysis.words}\n문자: ${data.data.analysis.characters}`;
+                    }
+                    
+                    fileInput.value = '';
+                    fileUploadCount++;
+                    document.getElementById('fileCount').textContent = fileUploadCount;
+                } else {
+                    throw new Error(data.message || '업로드 실패');
+                }
+            } catch (error) {
+                console.error('파일 업로드 실패:', error);
+                resultDiv.className = 'result-box error';
+                resultDiv.innerHTML = `❌ 오류: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

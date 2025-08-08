@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서버 연결 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Flask 서버 연결 테스트</h1>
+    
+    <div class="test-box">
+        <h2>1. 직접 URL 테스트</h2>
+        <p>먼저 브라우저에서 직접 접속해보세요:</p>
+        <a href="http://localhost:5000" target="_blank">
+            <button type="button">http://localhost:5000 열기</button>
+        </a>
+        <p>↑ 클릭했을 때 JSON 데이터가 보이나요?</p>
+    </div>
+    
+    <div class="test-box">
+        <h2>2. Fetch API 테스트</h2>
+        <button onclick="testFetch()">Fetch 테스트</button>
+        <button onclick="testFetchWithCORS()">CORS 헤더 포함 테스트</button>
+        <div id="fetchResult"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>3. XMLHttpRequest 테스트</h2>
+        <button onclick="testXHR()">XHR 테스트</button>
+        <div id="xhrResult"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>4. 다른 포트 테스트</h2>
+        <button onclick="testPort(5000)">포트 5000</button>
+        <button onclick="testPort(5001)">포트 5001</button>
+        <button onclick="testPort(3000)">포트 3000</button>
+        <div id="portResult"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>5. 서버 상태</h2>
+        <button onclick="checkAllEndpoints()">모든 엔드포인트 확인</button>
+        <div id="endpointResult"></div>
+    </div>
+
+    <script>
+        // Fetch 테스트
+        async function testFetch() {
+            const resultDiv = document.getElementById('fetchResult');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '연결 시도중...';
+            
+            try {
+                console.log('Fetch 시작:', 'http://localhost:5000/');
+                const response = await fetch('http://localhost:5000/');
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = '✅ 성공!\n' + JSON.stringify(data, null, 2);
+                console.log('성공:', data);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ 실패!\n' + error.message;
+                console.error('에러:', error);
+            }
+        }
+        
+        // CORS 헤더 포함 테스트
+        async function testFetchWithCORS() {
+            const resultDiv = document.getElementById('fetchResult');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '연결 시도중 (CORS 헤더 포함)...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = '✅ 성공!\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ 실패!\n' + error.message;
+            }
+        }
+        
+        // XMLHttpRequest 테스트
+        function testXHR() {
+            const resultDiv = document.getElementById('xhrResult');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'XHR 연결 시도중...';
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:5000/', true);
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ XHR 성공!\n' + xhr.responseText;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ XHR 실패! Status: ' + xhr.status;
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ XHR 네트워크 에러!';
+            };
+            
+            xhr.send();
+        }
+        
+        // 다른 포트 테스트
+        async function testPort(port) {
+            const resultDiv = document.getElementById('portResult');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = `포트 ${port} 테스트중...`;
+            
+            try {
+                const response = await fetch(`http://localhost:${port}/`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ 포트 ${port} 연결 성공!\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 포트 ${port} 연결 실패!\n` + error.message;
+            }
+        }
+        
+        // 모든 엔드포인트 확인
+        async function checkAllEndpoints() {
+            const resultDiv = document.getElementById('endpointResult');
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '엔드포인트 확인중...';
+            
+            const endpoints = [
+                '/',
+                '/api/status',
+                '/api/tasks',
+            ];
+            
+            let results = [];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`http://localhost:5000${endpoint}`);
+                    if (response.ok) {
+                        results.push(`✅ ${endpoint} - OK`);
+                    } else {
+                        results.push(`⚠️ ${endpoint} - Status: ${response.status}`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${endpoint} - 연결 실패`);
+                }
+            }
+            
+            resultDiv.className = 'result';
+            resultDiv.textContent = results.join('\n');
+        }
+        
+        // 페이지 로드 시 자동 테스트
+        window.onload = function() {
+            console.log('테스트 페이지 로드됨');
+            console.log('현재 URL:', window.location.href);
+            
+            // 1초 후 자동으로 기본 테스트 실행
+            setTimeout(() => {
+                console.log('자동 테스트 시작...');
+                testFetch();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

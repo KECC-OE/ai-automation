@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 자동화 프로젝트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .emoji {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.3s both;
+        }
+        
+        .status-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+        
+        button {
+            background: white;
+            color: #764ba2;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            animation: fadeInUp 1s ease 0.9s both;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .current-time {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji">🤖</div>
+        <h1>AI 자동화 프로젝트</h1>
+        <p>첫 번째 웹페이지가 성공적으로 실행되었습니다!</p>
+        
+        <div class="status-box">
+            <h3>📊 프로젝트 상태</h3>
+            <div class="status-item">
+                <span>Frontend</span>
+                <span class="status-dot"></span>
+            </div>
+            <div class="status-item">
+                <span>Backend</span>
+                <span class="status-dot"></span>
+            </div>
+            <div class="status-item">
+                <span>Database</span>
+                <span class="status-dot"></span>
+            </div>
+        </div>
+        
+        <button onclick="testConnection()">연결 테스트</button>
+        
+        <div class="current-time" id="currentTime"></div>
+    </div>
+    
+    <script>
+        // 현재 시간 표시
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('ko-KR');
+            document.getElementById('currentTime').textContent = `현재 시간: ${timeString}`;
+        }
+        
+        // 페이지 로드 시 시간 업데이트
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // 연결 테스트 함수
+        function testConnection() {
+            alert('🎉 버튼이 정상적으로 작동합니다!\n\n다음 단계:\n1. Backend 서버 연결\n2. 데이터베이스 설정\n3. AI API 연동');
+            
+            // 버튼에 애니메이션 효과
+            event.target.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                event.target.style.transform = '';
+            }, 200);
+        }
+        
+        // 콘솔에 환영 메시지
+        console.log('%c🎉 AI 자동화 프로젝트에 오신 것을 환영합니다!', 
+                   'color: #764ba2; font-size: 20px; font-weight: bold;');
+        console.log('프로젝트가 성공적으로 설정되었습니다.');
+    </script>
+</body>
+</html>

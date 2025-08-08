@@ -1,0 +1,12 @@
+{
+  "name": "ai-automation-frontend",
+  "version": "1.0.0",
+  "description": "AI 자동화 프로젝트 프론트엔드",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "your-name",
+  "license": "MIT"
+}
